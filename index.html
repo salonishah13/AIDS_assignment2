@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crime Rate Visualization</title>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #F4F6FF;
+        }
+        .line {
+            fill: none;
+            stroke-width: 2;
+        }
+        .bar {
+            fill: #EB8317;
+        }
+        .donut {
+            fill: #F3C623;
+        }
+        .legend {
+            font-size: 14px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Crime Rate Visualization</h1>
+
+    <!-- Google Charts -->
+    <div id="piechart" style="width: 900px; height: 500px;"></div>
+    <div id="barchart" style="width: 900px; height: 500px;"></div>
+    <div id="donutchart" style="width: 900px; height: 500px;"></div>
+
+    <!-- D3.js Charts -->
+    <h2>Crime Severity Distribution</h2>
+    <svg id="barChart" width="900" height="500"></svg>
+    <h2>Monthly Crime Trends</h2>
+    <svg id="lineChart" width="900" height="500"></svg>
+
+    <script type="text/javascript">
+        // Load Google Charts
+        google.charts.load('current', {packages: ['corechart']});
+        google.charts.setOnLoadCallback(drawCharts);
+
+        function drawCharts() {
+            drawPieChart();
+            drawBarChart();
+            drawDonutChart();
+        }
+
+        // 1. Pie Chart for Crime Type Distribution
+        function drawPieChart() {
+            var data = google.visualization.arrayToDataTable([
+                ['Crime Type', 'Count'],
+                ['Theft', 20],
+                ['Assault', 15],
+                ['Burglary', 15],
+                ['Vandalism', 20],
+                ['Robbery', 10],
+                ['Cybercrime', 5],
+            ]);
+
+            var options = {
+                title: 'Distribution of Crime Types',
+                backgroundColor: '#F4F6FF',
+                slices: {
+                    0: {color: '#F3C623'},
+                    1: {color: '#EB8317'},
+                    2: {color: '#10375C'},
+                    3: {color: '#F3C623'},
+                    4: {color: '#EB8317'},
+                    5: {color: '#10375C'},
+                },
+            };
+
+            var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+            chart.draw(data, options);
+        }
+
+        // 2. Bar Chart for Crime Severity
+        function drawBarChart() {
+            var data = google.visualization.arrayToDataTable([
+                ['Severity', 'Count'],
+                ['Low', 25],
+                ['Medium', 35],
+                ['High', 40]
+            ]);
+
+            var options = {
+                title: 'Crime Severity Distribution',
+                backgroundColor: '#F4F6FF',
+                hAxis: {
+                    title: 'Count',
+                    minValue: 0,
+                },
+                vAxis: {
+                    title: 'Severity',
+                },
+                colors: ['#F3C623'],
+            };
+
+            var chart = new google.visualization.BarChart(document.getElementById('barchart'));
+            chart.draw(data, options);
+        }
+
+        // 3. Donut Chart for Solved vs. Unsolved Crimes
+        function drawDonutChart() {
+            var data = google.visualization.arrayToDataTable([
+                ['Status', 'Count'],
+                ['Solved', 30],
+                ['Unsolved', 70],
+            ]);
+
+            var options = {
+                title: 'Solved vs. Unsolved Crimes',
+                backgroundColor: '#F4F6FF',
+                pieHole: 0.4,
+                slices: {
+                    0: {color: '#EB8317'},
+                    1: {color: '#F3C623'},
+                },
+            };
+
+            var chart = new google.visualization.PieChart(document.getElementById('donutchart'));
+            chart.draw(data, options);
+        }
+    </script>
+
+    <script>
+        // D3.js for Crime Severity Distribution
+        const svgBar = d3.select("#barChart");
+        const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+        const width = +svgBar.attr("width") - margin.left - margin.right;
+        const height = +svgBar.attr("height") - margin.top - margin.bottom;
+
+        const severityData = [
+            { severity: 'Low', count: 25 },
+            { severity: 'Medium', count: 35 },
+            { severity: 'High', count: 40 }
+        ];
+
+        const xBar = d3.scaleBand()
+            .domain(severityData.map(d => d.severity))
+            .range([0, width])
+            .padding(0.1);
+
+        const yBar = d3.scaleLinear()
+            .domain([0, d3.max(severityData, d => d.count)])
+            .nice()
+            .range([height, 0]);
+
+        const gBar = svgBar.append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        gBar.selectAll(".bar")
+            .data(severityData)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => xBar(d.severity))
+            .attr("y", d => yBar(d.count))
+            .attr("width", xBar.bandwidth())
+            .attr("height", d => height - yBar(d.count))
+            .attr("fill", "#EB8317");
+
+        gBar.append("g")
+            .attr("class", "axis axis--x")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(xBar));
+
+        gBar.append("g")
+            .attr("class", "axis axis--y")
+            .call(d3.axisLeft(yBar));
+
+        // D3.js for Monthly Crime Trends
+        const svgLine = d3.select("#lineChart");
+        const lineData = [
+            { month: 'January', count: 20 },
+            { month: 'February', count: 25 },
+            { month: 'March', count: 30 },
+            { month: 'April', count: 35 },
+            { month: 'May', count: 40 },
+            { month: 'June', count: 50 },
+            { month: 'July', count: 45 },
+            { month: 'August', count: 55 },
+            { month: 'September', count: 60 },
+            { month: 'October', count: 50 },
+            { month: 'November', count: 65 },
+            { month: 'December', count: 70 },
+        ];
+
+        const xLine = d3.scaleBand()
+            .domain(lineData.map(d => d.month))
+            .range([0, width])
+            .padding(0.1);
+
+        const yLine = d3.scaleLinear()
+            .domain([0, d3.max(lineData, d => d.count)])
+            .nice()
+            .range([height, 0]);
+
+        const gLine = svgLine.append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const line = d3.line()
+            .x(d => xLine(d.month) + xLine.bandwidth() / 2)
+            .y(d => yLine(d.count));
+
+        gLine.append("path")
+            .datum(lineData)
+            .attr("class", "line")
+            .attr("d", line)
+            .attr("fill", "none")
+            .attr("stroke", "#10375C")
+            .attr("stroke-width", 2);
+
+        gLine.selectAll(".dot")
+            .data(lineData)
+            .enter().append("circle")
+            .attr("class", "dot")
+            .attr("cx", d => xLine(d.month) + xLine.bandwidth() / 2)
+            .attr("cy", d => yLine(d.count))
+            .attr("r", 5)
+            .attr("fill", "#F3C623");
+        
+        gLine.append("g")
+            .attr("class", "axis axis--x")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(xLine));
+
+        gLine.append("g")
+            .attr("class", "axis axis--y")
+            .call(d3.axisLeft(yLine));
+    </script>
+</body>
+</html>
